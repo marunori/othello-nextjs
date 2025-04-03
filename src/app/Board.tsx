@@ -19,7 +19,7 @@ const Board: React.FC<BoardProps> = ({ board, onClick }) => {
               style={{
                 width: '50px',
                 height: '50px',
-                backgroundColor: '#A07555',
+                backgroundColor: 'green',
                 border: '2px solid black',
                 position: 'relative',
               }}
