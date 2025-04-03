@@ -155,6 +155,12 @@ export default function Page() {
     }
   };
 
+  const resetGame = () => {
+    setBoard(initialBoard);
+    setCurrentPlayer('W');
+    setGameOver(false);
+  };
+
   return (
     <div>
       <h1>Othello</h1>
@@ -165,6 +171,7 @@ export default function Page() {
         </p>
       )}
       <Board board={board} onClick={handleClick} />
+      <button onClick={resetGame}>Reset Game</button>
     </div>
   );
 }
