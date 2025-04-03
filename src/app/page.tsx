@@ -122,6 +122,7 @@ export default function Page() {
           return;
         } else {
           // Skip the next player's turn
+          setCurrentPlayer(nextPlayer);
           return;
         }
       }
@@ -129,11 +130,40 @@ export default function Page() {
     }
   };
 
+  const countPieces = (board: string[][], player: string): number => {
+    let count = 0;
+    for (let row = 0; row < 8; row++) {
+      for (let col = 0; col < 8; col++) {
+        if (board[row][col] === player) {
+          count++;
+        }
+      }
+    }
+    return count;
+  };
+
+  const getWinner = (): string => {
+    const blackCount = countPieces(board, 'B');
+    const whiteCount = countPieces(board, 'W');
+
+    if (blackCount > whiteCount) {
+      return 'Black';
+    } else if (whiteCount > blackCount) {
+      return 'White';
+    } else {
+      return 'Tie';
+    }
+  };
+
   return (
     <div>
       <h1>Othello</h1>
       <p>Current Player: {currentPlayer === 'B' ? 'Black' : 'White'}</p>
-      {gameOver && <p>Game Over!</p>}
+      {gameOver && (
+        <p>
+          Game Over! Winner: {getWinner()}
+        </p>
+      )}
       <Board board={board} onClick={handleClick} />
     </div>
   );
