@@ -19,11 +19,13 @@ const Board: React.FC<BoardProps> = ({ board, onClick }) => {
               style={{
                 width: '50px',
                 height: '50px',
-                backgroundColor: cell === 'B' ? 'black' : cell === 'W' ? 'white' : 'lightgreen',
-                borderRadius: '50%',
-                border: '1px solid gray',
+                backgroundColor: '#A07555',
+                border: '2px solid black',
+                position: 'relative',
               }}
             >
+              {cell === 'B' && <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'black' }}></div>}
+              {cell === 'W' && <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'white' }}></div>}
             </button>
           ))}
         </div>
