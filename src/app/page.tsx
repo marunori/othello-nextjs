@@ -16,7 +16,7 @@ const initialBoard = [
 
 export default function Page() {
   const [board, setBoard] = useState(initialBoard);
-  const [currentPlayer, setCurrentPlayer] = useState('B');
+  const [currentPlayer, setCurrentPlayer] = useState('W');
 
   const handleClick = (row: number, col: number) => {
     if (board[row][col] !== '') {
