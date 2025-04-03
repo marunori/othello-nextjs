@@ -71,6 +71,7 @@ export default function Page() {
   return (
     <div>
       <h1>Othello</h1>
+      <p>Current Player: {currentPlayer === 'B' ? 'Black' : 'White'}</p>
       <Board board={board} onClick={handleClick} />
     </div>
   );
