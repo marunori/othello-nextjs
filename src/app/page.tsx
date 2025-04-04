@@ -1,7 +1,7 @@
 'use client';
 
 import Board from './Board';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const initialBoard = [
   ['', '', '', '', '', '', '', ''],
@@ -160,6 +160,30 @@ export default function Page() {
     setCurrentPlayer('W');
     setGameOver(false);
   };
+
+  const aiMove = () => {
+    if (!hasValidMoves(board, 'B')) {
+      setCurrentPlayer('W');
+      return;
+    }
+    for (let i = 0; i < 8; i++) {
+      for (let j = 0; j < 8; j++) {
+        if (isValidMove(board, 'B', i, j)) {
+          handleClick(i, j);
+          return;
+        }
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (currentPlayer === 'B' && !gameOver) {
+      const timer = setTimeout(() => {
+        aiMove();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [currentPlayer, board, gameOver]);
 
   return (
     <div>
