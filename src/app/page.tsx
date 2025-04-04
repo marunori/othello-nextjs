@@ -161,6 +161,13 @@ export default function Page() {
     setGameOver(false);
   };
 
+  const skipTurn = () => {
+    if (!hasValidMoves(board, currentPlayer)) {
+      const nextPlayer = currentPlayer === 'B' ? 'W' : 'B';
+      setCurrentPlayer(nextPlayer);
+    }
+  };
+
   const aiMove = () => {
     if (!hasValidMoves(board, 'B')) {
       setCurrentPlayer('W');
@@ -196,6 +203,7 @@ export default function Page() {
       )}
       <Board board={board} onClick={handleClick} />
       <button onClick={resetGame}>Reset Game</button>
+      <button onClick={skipTurn}>Skip Turn</button>
     </div>
   );
 }
