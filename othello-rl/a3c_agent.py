@@ -160,6 +160,29 @@ class A3CAgent:
             self.optimizer.step()
             print(f"Replay training iteration {i}: loss {loss_avg.item()}")
     
+    def save_model(self, filepath):
+        torch.save({
+            'global_network_state_dict': self.global_network.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict(),
+        }, filepath)
+        print(f"Model saved to {filepath}")
+
+    def load_model(self, filepath):
+        checkpoint = torch.load(filepath)
+        self.global_network.load_state_dict(checkpoint['global_network_state_dict'])
+        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        print(f"Model loaded from {filepath}")
+
+    def save_model_onnx(self, filepath):
+        try:
+            import onnx
+        except ImportError:
+            print("ONNX module not installed. Please run 'pip install onnx' and try again.")
+            return
+        dummy_input = torch.randn(1, self.global_network.fc.in_features)
+        torch.onnx.export(self.global_network, dummy_input, filepath, input_names=['input'], output_names=['policy', 'value'])
+        print(f"Model saved in ONNX format to {filepath}")
+
 if __name__ == '__main__':
     mp.set_start_method('spawn', force=True)
     agent = A3CAgent()
@@ -172,3 +195,7 @@ if __name__ == '__main__':
         agent.match()
         print("Training global network from replay buffer...")
         agent.train_from_replay_buffer(batch_size=8, iterations=10)
+        print("Saving model...")
+        agent.save_model("a3c_model.pth")
+        print("Saving ONNX model...")
+        agent.save_model_onnx("a3c_model.onnx")
