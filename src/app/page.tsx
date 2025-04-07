@@ -1,5 +1,8 @@
 'use client';
 
+ // @ts-ignore
+ // @ts-ignore
+import * as ort from 'onnxruntime-web';
 import Board from './Board';
 import { useState, useEffect } from 'react';
 
@@ -168,20 +171,60 @@ export default function Page() {
     }
   };
 
-  const aiMove = () => {
-    if (!hasValidMoves(board, 'B')) {
-      setCurrentPlayer('W');
-      return;
+function boardToNumeric(board: string[][]): number[] {
+  // Convert board representation to a flat numeric array:
+  // 'B' -> 1, 'W' -> -1, empty ('') -> 0
+  const numeric: number[] = [];
+  for (let i = 0; i < board.length; i++) {
+    for (let j = 0; j < board[i].length; j++) {
+      const cell = board[i][j];
+      if (cell === 'B') numeric.push(1);
+      else if (cell === 'W') numeric.push(-1);
+      else numeric.push(0);
     }
-    for (let i = 0; i < 8; i++) {
-      for (let j = 0; j < 8; j++) {
-        if (isValidMove(board, 'B', i, j)) {
-          handleClick(i, j);
-          return;
-        }
+  }
+  return numeric;
+}
+
+const aiMove = async () => {
+  // Compute valid moves for AI ('B')
+  const validMoves: number[] = [];
+  for (let i = 0; i < 8; i++) {
+    for (let j = 0; j < 8; j++) {
+      if (isValidMove(board, 'B', i, j)) {
+        validMoves.push(i * 8 + j);
       }
     }
-  };
+  }
+  if (validMoves.length === 0) {
+    setCurrentPlayer('W');
+    return;
+  }
+
+  try {
+    const session = await ort.InferenceSession.create('/a3c_model.onnx');
+    const numericBoard = boardToNumeric(board);
+    const tensor = new ort.Tensor('float32', Float32Array.from(numericBoard), [1, 64]);
+    const feeds: Record<string, ort.Tensor> = { 'input': tensor };
+    const results = await session.run(feeds);
+    const policy = results['policy'].data as Float32Array;
+    // Select the best move among valid moves.
+    let bestIndex = validMoves[0];
+    let bestProb = policy[bestIndex];
+    for (const idx of validMoves) {
+      if (policy[idx] > bestProb) {
+        bestProb = policy[idx];
+        bestIndex = idx;
+      }
+    }
+    const row = Math.floor(bestIndex / 8);
+    const col = bestIndex % 8;
+    console.log(`AI (ONNX) selected move at row ${row}, col ${col} with probability ${bestProb}`);
+    handleClick(row, col);
+  } catch (error) {
+    console.error('Error during AI move using ONNX model:', error);
+  }
+};
 
   useEffect(() => {
     if (currentPlayer === 'B' && !gameOver) {

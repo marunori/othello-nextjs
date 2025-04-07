@@ -172,7 +172,6 @@ class A3CAgent:
         self.global_network.load_state_dict(checkpoint['global_network_state_dict'])
         self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         print(f"Model loaded from {filepath}")
-
     def save_model_onnx(self, filepath):
         try:
             import onnx
@@ -182,6 +181,44 @@ class A3CAgent:
         dummy_input = torch.randn(1, self.global_network.fc.in_features)
         torch.onnx.export(self.global_network, dummy_input, filepath, input_names=['input'], output_names=['policy', 'value'])
         print(f"Model saved in ONNX format to {filepath}")
+
+    def match_with_onnx(self, onnx_filepath):
+        try:
+            import onnxruntime as ort
+        except ImportError:
+            print("onnxruntime module not installed. Please run 'pip install onnxruntime' and try again.")
+            return
+        sess = ort.InferenceSession(onnx_filepath)
+        env = OthelloEnv()
+        env.reset()
+        transitions = []
+        current_player = env.current_player
+        while True:
+            valid_moves = env.get_valid_moves(current_player)
+            if not valid_moves:
+                break
+            state_array = np.array(env.board).flatten().astype(np.float32)
+            input_tensor = state_array.reshape(1, -1)
+            outputs = sess.run(['policy', 'value'], {'input': input_tensor})
+            policy = outputs[0][0]
+            valid_indices = [r * 8 + c for (r, c) in valid_moves]
+            best_action_index = max(valid_indices, key=lambda idx: policy[idx])
+            action = (best_action_index // 8, best_action_index % 8)
+            transitions.append((state_array, best_action_index, current_player))
+            _, _, done, _ = env.step(action)
+            current_player = env.current_player
+            if done:
+                break
+        board_np = np.array(env.board)
+        count1 = np.sum(board_np == 1)
+        count_minus1 = np.sum(board_np == -1)
+        if count1 > count_minus1:
+            winner = 1
+        elif count_minus1 > count1:
+            winner = -1
+        else:
+            winner = 0
+        print("ONNX Match completed. Winner:", "Player 1" if winner==1 else "Player 2" if winner==-1 else "Tie")
 
 if __name__ == '__main__':
     mp.set_start_method('spawn', force=True)
@@ -199,3 +236,5 @@ if __name__ == '__main__':
         agent.save_model("a3c_model.pth")
         print("Saving ONNX model...")
         agent.save_model_onnx("a3c_model.onnx")
+    print("Starting a match with ONNX model...")
+    agent.match_with_onnx("a3c_model.onnx")
