@@ -223,7 +223,7 @@ class A3CAgent:
 if __name__ == '__main__':
     mp.set_start_method('spawn', force=True)
     agent = A3CAgent()
-    num_cycles = 30  # Set number of cycles for training and matches
+    num_cycles = 300  # Set number of cycles for training and matches
     for cycle in range(num_cycles):
         print(f"--- Cycle {cycle+1} ---")
         print("Training agent...")
